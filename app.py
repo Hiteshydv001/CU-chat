@@ -22,6 +22,6 @@ init_db()
 init_routes(app)
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
+    port = int(os.getenv("PORT", 8080))
     logging.info(f"Starting Flask application on port {port}")
     app.run(debug=False, host="0.0.0.0", port=port, threaded=True)
