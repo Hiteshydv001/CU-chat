@@ -1,1 +1,1 @@
-web: python app.py  # Modify based on your framework
+web: gunicorn -w 4 -b 0.0.0.0:8000 app:app
