@@ -1,31 +1,32 @@
-# Use an official Python runtime as the base image
+# Use an official Python runtime as a base image
 FROM python:3.11-slim
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Install system dependencies (for FAISS and PyMuPDF)
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
+# Copy requirements file and install dependencies
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN python -m venv /opt/venv \
     && . /opt/venv/bin/activate \
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy the application files
 COPY . .
 
-# Pre-build FAISS index (optional, adjust path if needed)
-RUN . /opt/venv/bin/activate && python -m utils.faiss_search
+# Ensure correct port usage
+ENV PORT=8080
 
-# Expose port
-EXPOSE 5000
+# Pre-build FAISS index if needed (optional)
+RUN . /opt/venv/bin/activate && python -m utils.faiss_search || echo "FAISS index prebuild failed, continuing..."
 
-# Run the application
-CMD ["sh", "-c", ". /opt/venv/bin/activate && gunicorn --bind 0.0.0.0:5000 app:app"]
+# Expose the required port for Railway
+EXPOSE 8080
+
+# Command to run the application
+CMD ["/opt/venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
