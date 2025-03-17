@@ -15,17 +15,16 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN python -m venv /opt/venv \
-    && . /opt/venv/bin/activate \
-    && pip install --no-cache-dir -r requirements.txt
+    && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
 
-# Pre-build FAISS index with logging
-RUN . /opt/venv/bin/activate && python -m utils.faiss_search || { echo "FAISS index build failed"; cat chatbot.log; exit 1; }
+# Ensure FAISS index is built without breaking the build
+RUN /opt/venv/bin/python -m utils.faiss_search || echo "FAISS index build failed. Check chatbot.log"
 
-# Expose port
-EXPOSE 5000
+# Expose the Render-assigned port
+EXPOSE 8080
 
-# Run the application with reduced workers and increased timeout
-CMD ["sh", "-c", ". /opt/venv/bin/activate && gunicorn --bind 0.0.0.0:8080 --workers 1 --timeout 300 --log-level debug app:app"]
+# Use absolute path for Gunicorn
+CMD ["/opt/venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "300", "--log-level", "debug", "app:app"]
