@@ -57,29 +57,37 @@ if __name__ == "__main__":
     try:
         from utils.pdf_extractor import extract_text_from_pdf, extract_faqs
         
-        # Verify PDF file exists
+        # Default fallback data if files are missing
+        default_text = """
+        What is the hostel curfew?
+        10 PM on weekdays, 11 PM on weekends
+        When are exams scheduled?
+        Check the university website for the latest schedule.
+        """
+        faqs = {}
+        
+        # Try extracting from PDF first
         pdf_path = "data/university_faqs.pdf"
         logging.info(f"Checking if PDF exists: {pdf_path}")
-        if not os.path.exists(pdf_path):
-            logging.warning(f"PDF file not found: {pdf_path}")
-        else:
-            # Try extracting from PDF first
+        if os.path.exists(pdf_path):
             text = extract_text_from_pdf(pdf_path)
             faqs = extract_faqs(text)
-        # If no FAQs extracted, fall back to text file
+        
+        # If no FAQs, try text file or use default
         if not faqs:
             text_path = "data/university_faqs.txt"
-            logging.warning("No FAQs extracted from PDF, falling back to university_faqs.txt")
+            logging.warning("No FAQs extracted from PDF, falling back to university_faqs.txt or default")
             logging.info(f"Checking if text file exists: {text_path}")
-            if not os.path.exists(text_path):
-                logging.error(f"Text file not found: {text_path}")
-                raise FileNotFoundError(f"Text file not found: {text_path}")
-            with open(text_path, "r", encoding="utf-8") as f:
-                text = f.read()
+            if os.path.exists(text_path):
+                with open(text_path, "r", encoding="utf-8") as f:
+                    text = f.read()
+            else:
+                logging.warning(f"Text file not found, using default data")
+                text = default_text
             faqs = extract_faqs(text)
         
         questions = list(faqs.keys())
-        logging.info(f"Extracted {len(questions)} questions")
+        logging.info(f"Extracted {len(questions)} questions: {questions}")
         if not questions:
             logging.error("No questions extracted after fallback")
             raise ValueError("No valid questions found")
@@ -91,7 +99,6 @@ if __name__ == "__main__":
             logging.error("No valid embeddings generated")
             raise ValueError("No valid embeddings generated")
         
-        # Basic FAISS Index (can be replaced with advanced techniques below)
         dimension = embeddings.shape[1]
         logging.info(f"Creating FAISS index with dimension: {dimension}")
         index = faiss.IndexFlatL2(dimension)
@@ -99,35 +106,10 @@ if __name__ == "__main__":
         logging.info(f"Saving FAISS index to {INDEX_PATH}")
         faiss.write_index(index, INDEX_PATH)
         
-        # Optional: Advanced FAISS Index (uncomment to use)
-        # nlist = 100  # Number of clusters
-        # quantizer = faiss.IndexFlatL2(dimension)
-        # index = faiss.IndexIVFFlat(quantizer, dimension, nlist)
-        # index.train(embeddings)
-        # index.add(embeddings)
-        
         logging.info(f"Saving FAQ dictionary to {FAQ_DICT_PATH}")
         with open(FAQ_DICT_PATH, "wb") as f:
             pickle.dump(faqs, f)
         logging.info("FAISS index and FAQ dictionary built successfully")
-        
-        # Optional: Store in MongoDB (uncomment to use)
-        # from pymongo import MongoClient
-        # client = MongoClient(MONGO_URI)
-        # db = client[MONGO_DB_NAME]
-        # collection = db["raw_data"]
-        # for q, a in faqs.items():
-        #     collection.insert_one({"question": q, "answer": a, "embedding": embeddings[list(faqs.keys()).index(q)].tolist()})
-        # client.close()
-        # logging.info("Data stored in MongoDB")
-        
-        # Optional: Use Pinecone (uncomment to use, requires pinecone-client)
-        # import pinecone
-        # pinecone.init(api_key="YOUR_PINECONE_API_KEY", environment="YOUR_ENV")
-        # index = pinecone.Index("cu-chatbot-index")
-        # index.upsert(vectors=[(str(i), emb, {"question": q, "answer": a}) for i, (q, a), emb in enumerate(zip(faqs.keys(), faqs.values(), embeddings))])
-        # logging.info("Data stored in Pinecone")
-        
     except Exception as e:
         logging.error(f"Unexpected error during FAISS index build: {str(e)}")
         print(f"Error: {str(e)}")
