@@ -1,32 +1,31 @@
-# Use an official Python runtime as a base image
+# Use an official Python runtime as the base image
 FROM python:3.11-slim
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (for FAISS and PyMuPDF)
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file and install dependencies
+# Copy requirements file
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN python -m venv /opt/venv \
     && . /opt/venv/bin/activate \
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy the application files
+# Copy the rest of the application
 COPY . .
 
-# Ensure correct port usage
-ENV PORT=8080
+# Pre-build FAISS index with logging
+RUN . /opt/venv/bin/activate && python -m utils.faiss_search || { echo "FAISS index build failed"; cat chatbot.log; exit 1; }
 
-# Pre-build FAISS index if needed (optional)
-RUN . /opt/venv/bin/activate && python -m utils.faiss_search || echo "FAISS index prebuild failed, continuing..."
+# Expose port
+EXPOSE 5000
 
-# Expose the required port for Railway
-EXPOSE 8080
-
-# Command to run the application
-CMD ["/opt/venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+# Run the application with reduced workers and increased timeout
+CMD ["sh", "-c", ". /opt/venv/bin/activate && gunicorn --bind 0.0.0.0:8080 --workers 1 --timeout 300 --log-level debug app:app"]
