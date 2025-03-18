@@ -27,4 +27,5 @@ RUN /opt/venv/bin/python -m utils.faiss_search || echo "FAISS index build failed
 EXPOSE 8080
 
 # Use absolute path for Gunicorn
-CMD ["/opt/venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "300", "--log-level", "debug", "app:app"]
+CMD ["/opt/venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "600", "--preload", "--log-level", "debug", "app:app"]
+
