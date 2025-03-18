@@ -10,21 +10,22 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
-COPY requirements.txt .
+# Ensure pip is available before creating a virtual environment
+RUN python -m ensurepip
 
-# Install Python dependencies
-RUN python -m venv /opt/venv \
-    && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+# Create a virtual environment and install dependencies
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements file & install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
 
-# Ensure FAISS index is built without breaking the build
-RUN /opt/venv/bin/python -m utils.faiss_search || echo "FAISS index build failed. Check chatbot.log"
-
-# Expose the Render-assigned port
+# Expose the application port
 EXPOSE 8080
 
-# Use absolute path for Gunicorn
-CMD ["/opt/venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "300", "--preload", "--log-level", "debug", "app:app"]
+# Run the application with Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "300", "--preload", "--log-level", "debug", "app:app"]
