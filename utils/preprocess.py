@@ -1,10 +1,6 @@
 from sentence_transformers import SentenceTransformer
 import logging
-import sys
 import os
-
-# Add the parent directory (chat-cu-backend) to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configure logging
 logging.basicConfig(

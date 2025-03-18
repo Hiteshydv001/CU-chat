@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent  # Points to chat-cu-backend
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 FLASK_ENV = os.getenv("FLASK_ENV", "production")
 DEBUG = FLASK_ENV == "development"
-SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "your-default-secret-key")
+SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
 HOST = "0.0.0.0"
-PORT = int(os.getenv("PORT", 5000))
+PORT = int(os.getenv("PORT", 5000))  # Default to 5000 for Railway/Render
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB_NAME = "cu_chatbot"

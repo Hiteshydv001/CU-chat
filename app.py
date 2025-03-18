@@ -12,12 +12,19 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
+logging.info("Flask application initialized")
 
-# Initialize database and routes
-init_db()
-init_routes(app)
+# Defer database initialization to the first request
+def init_app():
+    with app.app_context():
+        init_db()
+        init_routes(app)
+        logging.info("Database and routes initialized")
+
+# Initialize on first request
+init_app()
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8080))  # Render assigns PORT dynamically
-    logging.info(f"Starting Flask application on port {port}")
-    app.run(debug=False, host="0.0.0.0", port=port, threaded=True)
+    port = int(os.getenv("PORT", 5000))  # Default to 5000 for Railway/Render
+    logging.info(f"Starting Flask application on port {port} for development")
+    app.run(debug=False, host="0.0.0.0", port=port)

@@ -3,11 +3,7 @@ import numpy as np
 from utils.preprocess import generate_embeddings
 import logging
 import pickle
-import sys
 import os
-
-# Add the parent directory (chat-cu-backend) to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configure logging
 logging.basicConfig(

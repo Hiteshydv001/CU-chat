@@ -1,11 +1,7 @@
 from pymongo import MongoClient
 from config.settings import MONGO_URI, MONGO_DB_NAME, MONGO_COLLECTION
 import logging
-import sys
 import os
-
-# Add the parent directory (chat-cu-backend) to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configure logging
 logging.basicConfig(

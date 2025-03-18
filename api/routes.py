@@ -3,11 +3,7 @@ from models.llm import generate_response
 from utils.faiss_search import search_faiss
 from database.queries import fetch_structured_data
 import logging
-import sys
 import os
-
-# Add the parent directory (chat-cu-backend) to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configure logging
 logging.basicConfig(

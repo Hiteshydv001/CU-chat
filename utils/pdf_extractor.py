@@ -1,11 +1,7 @@
 import fitz  # PyMuPDF
 import logging
-import sys
 import os
 from nltk.tokenize import sent_tokenize
-
-# Add the parent directory (chat-cu-backend) to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configure logging
 logging.basicConfig(
