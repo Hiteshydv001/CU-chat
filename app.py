@@ -25,6 +25,6 @@ def init_app():
 init_app()
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))  # Default to 5000 for Railway/Render
+    port = int(os.getenv("PORT", 5000))  # Default to 5000 for local testing
     logging.info(f"Starting Flask application on port {port} for development")
     app.run(debug=False, host="0.0.0.0", port=port)
