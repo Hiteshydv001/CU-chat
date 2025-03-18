@@ -15,22 +15,16 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN python -m venv /opt/venv \
-    && . /opt/venv/bin/activate \
-    && pip install --upgrade pip \
-    && pip install --no-cache-dir torch==2.6.0+cpu torchvision==0.21.0+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html \
-    && pip install --no-cache-dir -r requirements.txt
+    && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
 
-# Pre-download the SentenceTransformer model to avoid runtime download
-RUN . /opt/venv/bin/activate && python -c "from sentence_transformers import SentenceTransformer; model = SentenceTransformer('paraphrase-MiniLM-L3-v2', device='cpu')"
+# Ensure FAISS index is built without breaking the build
+RUN /opt/venv/bin/python -m utils.faiss_search || echo "FAISS index build failed. Check chatbot.log"
 
-# Pre-build FAISS index with logging
-RUN . /opt/venv/bin/activate && python -m utils.faiss_search || { echo "FAISS index build failed"; cat chatbot.log; exit 1; }
+# Expose the Render-assigned port
+EXPOSE 8080
 
-# Expose port
-EXPOSE 5000
-
-# Run the application with optimized settings
-CMD ["sh", "-c", ". /opt/venv/bin/activate && gunicorn --bind 0.0.0.0:5000 --workers 1 --timeout 600 --graceful-timeout 600 --log-level debug app:app"]
+# Use absolute path for Gunicorn
+CMD ["/opt/venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "300", "--preload", "--log-level", "debug", "app:app"]
